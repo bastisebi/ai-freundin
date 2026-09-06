@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI-Freundin</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f2f7;color:#202124}
+.app{max-width:520px;margin:auto;height:100vh;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.screen{display:none;flex:1;overflow:auto}.screen.active{display:flex;flex-direction:column}
+header,.bar{background:#7b4bb7;color:#fff;padding:17px 16px}
+.title{font-size:23px;font-weight:700}.sub{font-size:13px;opacity:.85;margin-top:3px}
+.bar{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+.bar h2{margin:0;font-size:19px}.back{border:0;background:none;color:#fff;font-size:32px;line-height:1;padding:0}
+.list{padding:8px}.chatrow{display:flex;align-items:center;padding:13px 10px;border-bottom:1px solid #eee;cursor:pointer}
+.avatar{width:55px;height:55px;border-radius:50%;background:#eadcff;display:grid;place-items:center;font-weight:700;font-size:22px;margin-right:12px;overflow:hidden;flex:none}
+.avatar img{width:100%;height:100%;object-fit:cover}.info{flex:1}.name{font-size:18px;font-weight:700}
+.preview{color:#777;font-size:14px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bottom{padding:12px;border-top:1px solid #eee}
+.primary,.savebtn{width:100%;border:0;border-radius:13px;background:#7b4bb7;color:#fff;padding:14px;font-size:16px;font-weight:700}
+.profile{padding:12px}.card{background:#fafafa;border:1px solid #e8e8e8;border-radius:15px;padding:14px;margin-bottom:12px}
+label,b{display:block;margin-bottom:7px;font-weight:650}
+input,textarea{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;margin-bottom:12px;background:#fff}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.choice{border:1px solid #ccc;background:#fff;padding:9px 12px;border-radius:20px;font-size:14px;cursor:pointer}
+.choice.selected{background:#7b4bb7;color:#fff;border-color:#7b4bb7}
+.hint{font-size:12px;color:#777;margin:-3px 0 10px}.sectiontitle{font-size:17px;font-weight:700;margin:2px 0 10px}
+.visual-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:12px}
+.visual-choice{border:1px solid #ddd;border-radius:13px;background:#fff;padding:8px;text-align:center;cursor:pointer}
+.visual-choice.selected{border:2px solid #7b4bb7;background:#f3eaff}
+.visual-choice img{width:100%;height:118px;display:block;object-fit:cover;border-radius:9px}.visual-choice svg{width:100%;height:90px;display:block}.visual-choice span{font-size:13px;font-weight:650}.mini-photo img{height:92px}
+.color-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.color-choice{border:1px solid #ddd;border-radius:12px;background:#fff;padding:8px;text-align:center;cursor:pointer}
+.color-dot{height:40px;border-radius:9px;margin-bottom:5px;border:1px solid #bbb}.color-choice.selected{outline:3px solid #7b4bb7}
+#messages{flex:1;padding:14px;overflow:auto;background:#f4f1f6}
+.bubble{max-width:82%;padding:11px 14px;border-radius:18px;background:#fff;margin:8px 0;box-shadow:0 1px 3px #ddd;white-space:pre-wrap;overflow-wrap:anywhere}
+.bubble.me{margin-left:auto;background:#e7d7ff}.typing{color:#777;font-style:italic}
+.composer{display:flex;gap:8px;padding:10px;border-top:1px solid #ddd;background:#fff}
+.composer input{margin:0;flex:1}.composer button{border:0;background:#7b4bb7;color:#fff;border-radius:12px;padding:0 17px;font-size:20px}
+.delete{margin-top:9px;background:#fff;color:#b00020;border:1px solid #e0b7bd;border-radius:10px;padding:10px;width:100%}
+.empty{text-align:center;color:#777;padding:35px 20px}
+.small{font-size:12px;color:#777}
+</style>
+</head>
+<body>
+<div class="app">
+
+<section id="home" class="screen active">
+<header><div class="title">AI-Freundin</div><div class="sub">Deine Charaktere & Chats</div></header>
+<div class="list" id="characterList"></div>
+<div class="bottom"><button class="primary" onclick="startCreate()">＋ Neuer Charakter</button></div>
+</section>
+
+<section id="create" class="screen">
+<div class="bar"><button class="back" onclick="show('home')">‹</button><h2 id="createTitle">Charakter erstellen</h2></div>
+<div class="profile">
+
+<div class="card">
+<div class="sectiontitle">📷 Bild / Avatar</div>
+<input id="avatarFile" type="file" accept="image/*" onchange="previewAvatar(event)">
+<div id="avatarPreview" class="avatar" style="width:96px;height:96px;margin:8px auto;font-size:30px;color:#7b4bb7">+</div>
+</div>
+
+<div class="card">
+<label>Name</label>
+<input id="cname" placeholder="z. B. Silvana">
+
+<label>Alter (18–99)</label>
+<input id="age" type="number" min="18" max="99" placeholder="18–99">
+
+<label>Geschlecht</label>
+<div class="choices" id="genderChoices">
+<button type="button" class="choice" data-group="gender" onclick="selectOne(this)">Männlich</button>
+<button type="button" class="choice" data-group="gender" onclick="selectOne(this)">Weiblich</button>
+</div>
+</div>
+
+<div class="card">
+<div class="sectiontitle">Persönlichkeit</div>
+<div class="hint">Mehrere Eigenschaften auswählen.</div>
+<div class="choices" id="personalityChoices"></div>
+</div>
+
+<div class="card">
+<div class="sectiontitle">🎨 Aussehen</div>
+
+<label>Haarfarbe</label>
+<div class="color-grid" id="hairColors"></div>
+
+<label>Frisur</label>
+<div class="visual-grid" id="hairstyles"></div>
+
+<label>Haarlänge</label>
+<div class="visual-grid" id="hairLengths"></div>
+
+<label>Augenfarbe</label>
+<div class="choices field" data-field="eyeColor" id="eyeColors"></div>
+
+<label>Brustgröße</label>
+<div class="choices field" data-field="breastSize" id="breastSizes"></div>
+
+<label>Brustform / Festigkeit</label>
+<div class="choices field" data-field="breastForm" id="breastForms"></div>
+
+<label>Figur</label>
+<div class="choices field" data-field="figure" id="figures"></div>
+
+<label>Po-Form</label>
+<div class="visual-grid" id="buttShapes"></div>
+</div>
+
+<div class="card">
+<div class="sectiontitle">❤️ Interessen</div>
+<div class="hint">Mehrere Interessen auswählen.</div>
+<div class="choices" id="interestChoices"></div>
+</div>
+
+<div class="card">
+<label>Charakterbeschreibung</label>
+<textarea id="description" rows="5" placeholder="Sie ist selbstbewusst, liebt Autos und macht gerne Witze."></textarea>
+</div>
+
+<button class="savebtn" onclick="saveCharacter()">Charakter speichern</button>
+<div style="height:20px"></div>
+</div>
+</section>
+
+<section id="chat" class="screen">
+<div class="bar">
+<button class="back" onclick="show('home')">‹</button>
+<div id="chatavatar" class="avatar">S</div>
+<div><h2 id="chatname" style="margin:0">Silvana</h2><div id="chatstatus" class="small" style="color:#fff">online</div></div>
+</div>
+<div id="messages"></div>
+<div class="composer">
+<input id="msg" placeholder="Nachricht schreiben …" autocomplete="off">
+<button onclick="send()">➤</button>
+</div>
+</section>
+
+</div>
+
+<script>
+const personalities=[
+"Liebevoll","Frech","Humorvoll","Schüchtern","Selbstbewusst","Dominant","Verspielt",
+"Romantisch","Abenteuerlustig","Energisch","Ruhig","Geduldig","Spontan","Ehrlich",
+"Treuer Typ","Neugierig","Intelligent","Selbstständig","Sensibel","Direkt","Flirty",
+"Necken","Beschützend","Fürsorglich","Optimistisch","Ironisch","Locker","Leidenschaftlich"
+];
+
+const interests=[
+"Auto","Gaming","Sport","Musik","Reisen","Kochen","Filme","Serien","Fotografie","Tiere",
+"Natur","Wandern","Fitness","Fußball","Eishockey","Tanzen","Lesen","Mode","Beauty","Shopping",
+"Technik","Kunst","Konzerte","Partys","Wellness","Reparieren / DIY","Naturwissenschaft",
+"Karriere","Finanzen","Sprachen","Motorräder","Camping","Angeln","Skifahren","Handwerk",
+"Anime","Bücher","Kino","Gastronomie","Geschichte","Wissenschaft"
+];
+
+const hairColors=[
+["Platinblond","#f3e6bd"],["Blond","#d7ad55"],["Honigblond","#c99036"],["Hellbraun","#9b7049"],
+["Braun","#68432c"],["Dunkelbraun","#3a251c"],["Schwarz","#151515"],["Rot","#8c392d"],
+["Kupfer","#b86435"],["Aubergine","#5a315c"],["Blau","#4169a1"],["Rosa","#c77d98"],
+["Silbergrau","#b9bec8"],["Weiß","#eeeeee"],["Türkis","#55aeb1"]
+];
+
+const hairStyles=[
+["Offen","open"],["Glatt","straight"],["Wellen","waves"],["Locken","curls"],["Bob","bob"],
+["Long Bob","lob"],["Pixie Cut","pixie"],["Pferdeschwanz","pony"],["Dutt","bun"],
+["Zopf","braid"],["Zwei Zöpfe","twobraids"],["Half-up","half"],["Curtain Bangs","curtain"],
+["Seitenscheitel","side"],["Curly Shag","shag"],["Undercut","under"]
+];
+
+const hairLengths=["Sehr kurz","Kurz / Bob","Schulterlang","Mittellang","Lang","Sehr lang"];
+const eyeColors=["Blau","Grün","Braun","Grau","Haselnuss","Amber"];
+const breastSizes=["AA","A","B","C","D","DD / E","F","G","H+"];
+const breastForms=["Fest","Straff / stehend","Weich","Natürlich","Leicht hängend","Deutlich hängend","Rund","Tropfenform"];
+const figures=["Schlank","Zierlich","Sportlich","Kurvig","Sanduhr","Birnenform","Apfelform","Kräftig"];
+const buttShapes=["Rund","Herz / A-Form","V-Form","Quadratisch","Ausgeprägt","Sportlich"];
+
+function esc(s){
+ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+const photoBase="https://images.pexels.com/photos/";
+const photoFor={
+  open:photoBase+"21768402/pexels-photo-21768402.jpeg?auto=compress&cs=tinysrgb&w=600",
+  straight:photoBase+"7541488/pexels-photo-7541488.jpeg?auto=compress&cs=tinysrgb&w=600",
+  waves:photoBase+"29616473/pexels-photo-29616473.jpeg?auto=compress&cs=tinysrgb&w=600",
+  curls:photoBase+"15834881/pexels-photo-15834881.jpeg?auto=compress&cs=tinysrgb&w=600",
+  bob:photoBase+"10443160/pexels-photo-10443160.jpeg?auto=compress&cs=tinysrgb&w=600",
+  lob:photoBase+"6217808/pexels-photo-6217808.jpeg?auto=compress&cs=tinysrgb&w=600",
+  pixie:photoBase+"19553582/pexels-photo-19553582.jpeg?auto=compress&cs=tinysrgb&w=600",
+  pony:photoBase+"9197367/pexels-photo-9197367.jpeg?auto=compress&cs=tinysrgb&w=600",
+  bun:photoBase+"1627125/pexels-photo-1627125.jpeg?auto=compress&cs=tinysrgb&w=600",
+  braid:photoBase+"7607808/pexels-photo-7607808.jpeg?auto=compress&cs=tinysrgb&w=600",
+  twobraids:photoBase+"24984376/pexels-photo-24984376.jpeg?auto=compress&cs=tinysrgb&w=600",
+  half:photoBase+"8468027/pexels-photo-8468027.jpeg?auto=compress&cs=tinysrgb&w=600",
+  curtain:photoBase+"29616473/pexels-photo-29616473.jpeg?auto=compress&cs=tinysrgb&w=600",
+  side:photoBase+"20262071/pexels-photo-20262071.jpeg?auto=compress&cs=tinysrgb&w=600",
+  shag:photoBase+"29616473/pexels-photo-29616473.jpeg?auto=compress&cs=tinysrgb&w=600",
+  under:photoBase+"15388399/pexels-photo-15388399.jpeg?auto=compress&cs=tinysrgb&w=600"
+};
+const bodyPhoto=photoBase+"21768393/pexels-photo-21768393.jpeg?auto=compress&cs=tinysrgb&w=600";
+const backPhoto=photoBase+"15198407/pexels-photo-15198407.jpeg?auto=compress&cs=tinysrgb&w=600";
+
+function photoCard(url,label,field){
+ return `<div class="visual-choice" data-field="${field}" data-value="${esc(label)}" onclick="selectVisual(this)"><img src="${url}" alt="${esc(label)}" loading="lazy"><span>${esc(label)}</span></div>`;
+}
+
+function svgFor(type, skin="#e5a27e", hair="#c28a55"){
+ const p={
+ open:"M35 15 Q50 5 65 15 L72 83 Q50 93 28 83Z",
+ straight:"M35 15 Q50 7 65 15 L68 84 Q50 89 32 84Z",
+ waves:"M35 15 Q50 7 65 15 Q72 28 64 39 Q72 51 64 63 Q72 75 64 84 Q50 89 36 84 Q28 75 36 63 Q28 51 36 39 Q28 28 35 15Z",
+ curls:"M34 18 Q42 5 50 18 Q58 5 66 18 L70 82 Q50 92 30 82Z",
+ bob:"M34 20 Q50 7 66 20 L68 64 Q50 76 32 64Z",
+ lob:"M34 18 Q50 7 66 18 L69 75 Q50 87 31 75Z",
+ pixie:"M36 24 Q50 7 65 23 L64 48 Q50 56 36 48Z",
+ pony:"M36 18 Q50 7 64 18 L58 45 Q75 35 78 54 Q77 70 62 72 L62 84 Q50 89 38 84Z",
+ bun:"M36 23 Q50 10 64 23 L60 70 Q50 82 40 70Z M42 12 Q50 2 58 12 Q58 20 50 22 Q42 20 42 12Z",
+ braid:"M35 17 Q50 7 65 17 L65 83 L57 87 L50 79 L43 87 L35 83Z",
+ twobraids:"M38 18 Q50 8 62 18 L64 83 Q57 88 52 78 L50 45 L48 78 Q43 88 36 83Z",
+ half:"M35 18 Q50 7 65 18 L69 82 Q50 90 31 82 L34 43 Q50 53 66 43Z",
+ curtain:"M35 20 Q50 7 65 20 L67 84 Q50 90 33 84 L40 42 Q50 30 60 42Z",
+ side:"M35 19 Q50 7 66 19 L69 82 Q50 90 31 82 L48 12Z",
+ shag:"M33 20 Q50 5 67 20 L71 80 Q50 92 29 80 L35 55 L28 63Z",
+ under:"M35 22 Q50 8 65 22 L64 53 Q50 60 36 53Z M37 56 L63 56 L61 75 L39 75Z"
+ };
+ return `<svg viewBox="0 0 100 100"><circle cx="50" cy="38" r="17" fill="${skin}"/><path d="${p[type]}" fill="${hair}" stroke="#5d3a24" stroke-width="2"/></svg>`;
+}
+
+function buttSVG(type){
+ const paths={
+ "Rund":"M25 20Q50 10 75 20L70 50Q66 78 50 80Q34 78 30 50Z",
+ "Herz / A-Form":"M27 20Q50 12 73 20L67 50Q63 78 50 82Q37 78 33 50Z",
+ "V-Form":"M22 20Q50 10 78 20L66 76Q50 82 34 76Z",
+ "Quadratisch":"M27 19Q50 14 73 19L72 70Q50 79 28 70Z",
+ "Ausgeprägt":"M20 23Q50 8 80 23L71 78Q50 87 29 78Z",
+ "Sportlich":"M29 22Q50 12 71 22L67 72Q50 80 33 72Z"
+ };
+ return `<svg viewBox="0 0 100 90"><path d="${paths[type]}" fill="#e5a27e" stroke="#7a4c39" stroke-width="2"/><path d="M50 39V78" stroke="#7a4c39" stroke-width="2"/></svg>`;
+}
+
+function buildOptions(){
+ document.getElementById("personalityChoices").innerHTML=personalities.map(x=>`<button type="button" class="choice" onclick="toggleChoice(this)">${esc(x)}</button>`).join("");
+ document.getElementById("interestChoices").innerHTML=interests.map(x=>`<button type="button" class="choice" onclick="toggleChoice(this)">${esc(x)}</button>`).join("");
+ document.getElementById("hairColors").innerHTML=hairColors.map(x=>`<div class="color-choice" data-value="${esc(x[0])}" onclick="selectColor(this)"><div class="color-dot" style="background:${x[1]}"></div>${esc(x[0])}</div>`).join("");
+ document.getElementById("hairstyles").innerHTML=hairStyles.map(x=>photoCard(photoFor[x[1]],x[0],"hairstyle")).join("");
+ const lengthPhotos=[photoFor.pixie,photoFor.bob,photoFor.lob,photoFor.straight,photoFor.waves,photoFor.straight];
+ document.getElementById("hairLengths").innerHTML=hairLengths.map((x,i)=>photoCard(lengthPhotos[i],x,"hairLength")).join("");
+ document.getElementById("eyeColors").innerHTML=eyeColors.map(x=>`<button type="button" class="choice" onclick="selectField(this)">${esc(x)}</button>`).join("");
+ document.getElementById("breastSizes").innerHTML=breastSizes.map(x=>`<div class="visual-choice mini-photo" data-field="breastSize" data-value="${esc(x)}" onclick="selectVisual(this)"><img src="${bodyPhoto}" alt="${esc(x)}" loading="lazy"><span>${esc(x)}</span></div>`).join("");
+ document.getElementById("breastForms").innerHTML=breastForms.map(x=>`<div class="visual-choice mini-photo" data-field="breastForm" data-value="${esc(x)}" onclick="selectVisual(this)"><img src="${bodyPhoto}" alt="${esc(x)}" loading="lazy"><span>${esc(x)}</span></div>`).join("");
+ document.getElementById("figures").innerHTML=figures.map(x=>`<div class="visual-choice mini-photo" data-field="figure" data-value="${esc(x)}" onclick="selectVisual(this)"><img src="${backPhoto}" alt="${esc(x)}" loading="lazy"><span>${esc(x)}</span></div>`).join("");
+ document.getElementById("buttShapes").innerHTML=buttShapes.map((x,i)=>photoCard(i%2?backPhoto:photoBase+"9164763/pexels-photo-9164763.jpeg?auto=compress&cs=tinysrgb&w=600",x,"buttShape")).join("");
+}
+
+let defaultChars=[{
+ name:"Silvana",avatar:"S",age:25,gender:"Weiblich",
+ personality:["Selbstbewusst","Frech","Humorvoll"],
+ interests:["Auto","Gaming"],
+ appearance:{},
+ description:"Sie ist selbstbewusst, liebt Autos und macht gerne Witze."
+}];
+
+let chars=JSON.parse(localStorage.getItem("af_chars")||"null")||defaultChars;
+let chats=JSON.parse(localStorage.getItem("af_chats")||"{}");
+let current="";
+
+function saveAll(){
+ localStorage.setItem("af_chars",JSON.stringify(chars));
+ localStorage.setItem("af_chats",JSON.stringify(chats));
+}
+
+function show(id){
+ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+}
+
+function toggleChoice(x){x.classList.toggle("selected")}
+
+function selectOne(x){
+ document.querySelectorAll('[data-group="'+x.dataset.group+'"]').forEach(y=>y.classList.remove("selected"));
+ x.classList.add("selected");
+}
+
+function selectField(x){
+ x.parentElement.querySelectorAll(".choice").forEach(y=>y.classList.remove("selected"));
+ x.classList.add("selected");
+}
+
+function selectColor(x){
+ document.querySelectorAll("#hairColors .color-choice").forEach(y=>y.classList.remove("selected"));
+ x.classList.add("selected");
+}
+
+function selectVisual(x){
+ const f=x.dataset.field;
+ document.querySelectorAll('.visual-choice[data-field="'+f+'"]').forEach(y=>y.classList.remove("selected"));
+ x.classList.add("selected");
+}
+
+function selectedTexts(el){
+ return [...el.querySelectorAll(".selected")].map(x=>x.textContent.trim());
+}
+
+function previewAvatar(e){
+ const f=e.target.files[0];
+ if(!f)return;
+ const r=new FileReader();
+ r.onload=()=>{
+  document.getElementById("avatarPreview").innerHTML=`<img src="${r.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  document.getElementById("avatarPreview").dataset.src=r.result;
+ };
+ r.readAsDataURL(f);
+}
+
+function clearForm(){
+ document.getElementById("cname").value="";
+ document.getElementById("age").value="";
+ document.getElementById("description").value="";
+ document.getElementById("avatarFile").value="";
+ document.getElementById("avatarPreview").innerHTML="+";
+ document.getElementById("avatarPreview").dataset.src="";
+ document.querySelectorAll("#create .choice,#create .visual-choice,#create .color-choice").forEach(x=>x.classList.remove("selected"));
+}
+
+function startCreate(){
+ clearForm();
+ document.getElementById("createTitle").textContent="Neuen Charakter erstellen";
+ show("create");
+}
+
+function renderList(){
+ const box=document.getElementById("characterList");
+ box.innerHTML="";
+ if(!chars.length){
+  box.innerHTML='<div class="empty">Noch kein Charakter vorhanden.<br>Erstelle deinen ersten Charakter.</div>';
+  return;
+ }
+ chars.forEach(c=>{
+  const row=document.createElement("div");
+  row.className="chatrow";
+  row.onclick=()=>openChat(c.name);
+  const av=document.createElement("div");
+  av.className="avatar";
+  if(c.avatar&&c.avatar.length>2)av.innerHTML=`<img src="${c.avatar}">`;
+  else av.textContent=c.avatar||c.name[0];
+  const info=document.createElement("div");
+  info.className="info";
+  info.innerHTML='<div class="name"></div><div class="preview"></div>';
+  info.querySelector(".name").textContent=c.name;
+  info.querySelector(".preview").textContent=(c.personality||[]).slice(0,3).join(" · ")||"Neuer Charakter";
+  row.append(av,info);
+  box.appendChild(row);
+ });
+}
+
+function saveCharacter(){
+ const name=document.getElementById("cname").value.trim();
+ const age=Number(document.getElementById("age").value);
+ const gender=document.querySelector("#genderChoices .selected")?.textContent.trim();
+ if(!name)return alert("Bitte einen Namen eingeben.");
+ if(!Number.isInteger(age)||age<18||age>99)return alert("Das Alter muss zwischen 18 und 99 liegen.");
+ if(!gender)return alert("Bitte ein Geschlecht auswählen.");
+
+ const appearance={
+  hairColor:document.querySelector("#hairColors .selected")?.dataset.value||"",
+  hairstyle:document.querySelector('.visual-choice[data-field="hairstyle"].selected')?.dataset.value||"",
+  hairLength:document.querySelector('.visual-choice[data-field="hairLength"].selected')?.dataset.value||"",
+  eyeColor:document.querySelector('#eyeColors .selected')?.textContent.trim()||"",
+  breastSize:document.querySelector('#breastSizes .selected')?.textContent.trim()||"",
+  breastForm:document.querySelector('#breastForms .selected')?.textContent.trim()||"",
+  figure:document.querySelector('#figures .selected')?.textContent.trim()||"",
+  buttShape:document.querySelector('.visual-choice[data-field="buttShape"].selected')?.dataset.value||""
+ };
+
+ const c={
+  name,age,gender,
+  avatar:document.getElementById("avatarPreview").dataset.src||name[0].toUpperCase(),
+  personality:selectedTexts(document.getElementById("personalityChoices")),
+  appearance,
+  interests:selectedTexts(document.getElementById("interestChoices")),
+  description:document.getElementById("description").value.trim()
+ };
+
+ const existing=chars.find(x=>x.name.toLowerCase()===name.toLowerCase());
+ if(existing){
+  Object.assign(existing,c);
+ }else{
+  chars.push(c);
+ }
+
+ if(!chats[name]){
+  chats[name]=[
+   {from:"her",text:`Hey 😊 Ich bin ${name}. Schön, dass du da bist!`},
+   {from:"her",text:c.description||"Erzähl mir etwas über dich – ich möchte dich kennenlernen."}
+  ];
+ }
+ saveAll();
+ renderList();
+ openChat(name);
+}
+
+function openChat(name){
+ current=name;
+ const c=chars.find(x=>x.name===name)||{};
+ document.getElementById("chatname").textContent=name;
+ const av=document.getElementById("chatavatar");
+ if(c.avatar&&c.avatar.length>2)av.innerHTML=`<img src="${c.avatar}">`;
+ else av.textContent=c.avatar||name[0];
+ if(!chats[name])chats[name]=[{from:"her",text:`Hey 😊 Ich bin ${name}.`}];
+ renderMessages();
+ show("chat");
+}
+
+function renderMessages(){
+ const box=document.getElementById("messages");
+ box.innerHTML="";
+ (chats[current]||[]).forEach(x=>addBubble(x.text,x.from==="me"?"me":""));
+ box.scrollTop=box.scrollHeight;
+}
+
+function addBubble(text,cls=""){
+ const b=document.createElement("div");
+ b.className="bubble "+cls;
+ b.textContent=text;
+ document.getElementById("messages").appendChild(b);
+}
+
+/* Lokaler Chat ohne API:
+   Die Antwort berücksichtigt Charakter, Persönlichkeit, Interessen,
+   vorherige Nachrichten und einfache Gesprächskontexte. */
+function findTopic(text){
+ const l=text.toLowerCase();
+ const topics=[
+  ["auto",/\b(auto|bmw|audi|mercedes|vw|wagen|pkw|fahrzeug|motorrad)\b/],
+  ["gaming",/\b(gaming|game|spiel|spielen|zocken|xbox|playstation|ps5|pc)\b/],
+  ["musik",/\b(musik|song|lied|band|sänger|sängerin|album)\b/],
+  ["essen",/\b(essen|pizza|burger|kochen|restaurant|frühstück|abendessen)\b/],
+  ["reise",/\b(urlaub|reise|reisen|meer|fliegen|hotel|strand)\b/],
+  ["sport",/\b(sport|fitness|fußball|eishockey|laufen|training)\b/],
+  ["arbeit",/\b(arbeit|job|chef|kollege|karriere|beruf)\b/],
+  ["liebe",/\b(liebe|beziehung|freundin|freund|date|romantisch|verliebt)\b/]
+ ];
+ return topics.find(x=>x[1].test(l))?.[0]||"";
+}
+
+function personalityTone(c){
+ const p=c.personality||[];
+ if(p.includes("Humorvoll")||p.includes("Ironisch"))return " 😄";
+ if(p.includes("Liebevoll")||p.includes("Fürsorglich"))return " ❤️";
+ if(p.includes("Frech")||p.includes("Flirty")||p.includes("Necken"))return " 😉";
+ if(p.includes("Ruhig")||p.includes("Schüchtern"))return " 😊";
+ return " 🙂";
+}
+
+function rememberUserFact(text){
+ const facts=JSON.parse(localStorage.getItem("af_facts_"+current)||"[]");
+ const clean=text.trim();
+ if(clean.length<3)return;
+ if(/\bich heiße\b/i.test(clean)||/\bmein name ist\b/i.test(clean))facts.push(clean);
+ if(/\bich (liebe|mag|hasse)\b/i.test(clean))facts.push(clean);
+ localStorage.setItem("af_facts_"+current,JSON.stringify(facts.slice(-20)));
+}
+
+function previousUserMessages(){
+ return (chats[current]||[]).filter(x=>x.from==="me").slice(-4).map(x=>x.text);
+}
+
+function answer(text){
+ const c=chars.find(x=>x.name===current)||{};
+ const p=c.personality||[];
+ const interests=c.interests||[];
+ const l=text.toLowerCase().trim();
+ const tone=personalityTone(c);
+ const topic=findTopic(text);
+ const prev=previousUserMessages();
+ const lastHer=[...(chats[current]||[])].reverse().find(x=>x.from==="her")?.text||"";
+
+ if(/^(hi|hallo|hey|moin|servus)\b/.test(l))
+  return `Hey 😊 Schön, dass du wieder da bist! Wie geht's dir heute?${tone}`;
+
+ if(/wie geht('s| es geht)|wie geht es dir/.test(l))
+  return `Mir geht's gut 😊 Ich bin gerade ganz bei dir im Chat. Wie geht es dir wirklich?`;
+
+ if(/wer bist du|wie heißt du/.test(l))
+  return `Ich bin ${current}. ${c.description||"Ich bin hier, um mit dir zu schreiben, zu reden und dich kennenzulernen."}${tone}`;
+
+ if(/was machst du|was machst du gerade/.test(l))
+  return `Gerade schreibe ich mit dir 😊 Und genau darauf konzentriere ich mich. Was machst du gerade?`;
+
+ if(/\b(danke|dankeschön)\b/.test(l))
+  return `Sehr gerne 😊 Ich freue mich, wenn ich dir helfen kann.${tone}`;
+
+ if(/^(ja|jap|jo|okay|ok|klar)\b/.test(l))
+  return lastHer ? `Okay 😊 Dann machen wir genau da weiter. Du hast gerade gesagt: „${lastHer.slice(0,100)}${lastHer.length>100?"…":""}“ – wie siehst du das?` : `Okay 😊 Erzähl mir mehr davon.`;
+
+ if(/^(nein|nee|nö|ne)\b/.test(l))
+  return `Alles klar 😊 Dann lassen wir das. Was möchtest du stattdessen erzählen?`;
+
+ if(topic==="auto")
+  return interests.includes("Auto")
+   ? `Oh ja, Autos sind definitiv mein Thema 😄 Welches Auto fährst du gerade – und was gefällt dir daran am meisten?`
+   : `Autos sind interessant 😄 Welches Auto gefällt dir besonders gut?`;
+
+ if(topic==="gaming")
+  return interests.includes("Gaming")
+   ? `Gaming passt gut zu mir 🎮 Was spielst du gerade, und was macht das Spiel für dich so gut?`
+   : `Gaming ist ein spannendes Thema 🎮 Was spielst du momentan am liebsten?`;
+
+ if(topic==="musik")
+  return `Musik sagt oft ziemlich viel über jemanden aus 🎵 Was hörst du gerade am liebsten – und hast du einen Lieblingssong?`;
+
+ if(topic==="essen")
+  return interests.includes("Kochen")
+   ? `Jetzt bekomme ich Hunger 😄 Wenn ich für dich kochen müsste: Was würdest du dir wünschen?`
+   : `Leckeres Thema 😋 Was ist dein absolutes Lieblingsessen?`;
+
+ if(topic==="reise")
+  return interests.includes("Reisen")
+   ? `Reisen klingt nach einem guten Plan ✈️ Wohin würdest du sofort mit mir reisen, wenn du morgen loskönntest?`
+   : `Wenn du morgen frei hättest und einfach loskönntest – wohin würdest du fahren?`;
+
+ if(topic==="sport")
+  return `Sport kann richtig gut tun 💪 Machst du selbst Sport oder schaust du lieber zu?`;
+
+ if(topic==="arbeit")
+  return `Erzähl mir davon 😊 Was gefällt dir an deiner Arbeit und was nervt dich manchmal?`;
+
+ if(topic==="liebe")
+  return `Das ist ein schönes Thema ❤️ Was ist dir bei einer Beziehung besonders wichtig?`;
+
+ if(/\b(stress|traurig|einsam|müde|genervt|schlecht)\b/.test(l))
+  return `Oh, das klingt nach einem schwierigen Moment. 😕 Erzähl mir, was passiert ist. Ich höre dir zu.`;
+
+ if(/\b(gut|super|glücklich|happy|perfekt|geil)\b/.test(l))
+  return `Das klingt gut 😊 Was genau ist denn passiert? Ich möchte mehr darüber hören.`;
+
+ if(/[?]$/.test(text.trim()))
+  return `Gute Frage 😊 Ich gehe darauf ein: Du fragst „${text.trim().replace(/[?]+$/,"")}“. ${p.includes("Humorvoll")?"Ich muss dabei gerade ein bisschen grinsen 😄 ":""}Was ist dir an diesem Punkt besonders wichtig?`;
+
+ const facts=JSON.parse(localStorage.getItem("af_facts_"+current)||"[]");
+ if(facts.length && Math.random()<0.35)
+  return `Ich erinnere mich daran, dass du mir schon erzählt hast: „${facts[facts.length-1]}“ 😊 Erzähl mir dazu noch etwas.`;
+
+ if(p.includes("Humorvoll"))
+  return `Okay, jetzt bin ich neugierig 😄 Erzähl mir mehr – wie meinst du das genau?`;
+
+ if(p.includes("Liebevoll")||p.includes("Fürsorglich"))
+  return `Mhm 😊 Ich höre dir zu. Erzähl mir ruhig noch etwas mehr darüber.`;
+
+ if(p.includes("Frech")||p.includes("Necken"))
+  return `Aha 😏 Jetzt will ich aber mehr wissen. Wie meinst du das genau?`;
+
+ return `Verstehe 😊 Ich möchte darauf eingehen. Erzähl mir noch ein bisschen mehr: Was genau meinst du damit?`;
+}
+
+function send(){
+ const input=document.getElementById("msg");
+ const text=input.value.trim();
+ if(!text||!current)return;
+
+ chats[current]=chats[current]||[];
+ chats[current].push({from:"me",text});
+ addBubble(text,"me");
+ input.value="";
+ rememberUserFact(text);
+
+ const box=document.getElementById("messages");
+ box.scrollTop=box.scrollHeight;
+
+ const typing=document.createElement("div");
+ typing.id="typing";
+ typing.className="bubble typing";
+ typing.textContent="schreibt …";
+ box.appendChild(typing);
+ box.scrollTop=box.scrollHeight;
+
+ const delay=500+Math.random()*700;
+ setTimeout(()=>{
+  typing.remove();
+  const reply=answer(text);
+  chats[current].push({from:"her",text:reply});
+  addBubble(reply);
+  saveAll();
+  box.scrollTop=box.scrollHeight;
+ },delay);
+}
+
+document.getElementById("msg").addEventListener("keydown",e=>{
+ if(e.key==="Enter"){e.preventDefault();send();}
+});
+
+buildOptions();
+renderList();
+</script>
+</body>
+</html>
