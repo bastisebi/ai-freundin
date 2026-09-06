@@ -5,73 +5,108 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>AI-Freundin</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f7;color:#171717}
-.app{max-width:520px;margin:auto;height:100vh;background:white;display:flex;flex-direction:column}
-header{padding:18px 18px 12px;border-bottom:1px solid #ddd;font-size:25px;font-weight:700}
-.sub{font-size:13px;color:#777;font-weight:400;margin-top:3px}
-.list{flex:1;overflow:auto}.chat{display:flex;gap:12px;padding:15px 18px;border-bottom:1px solid #eee;align-items:center}
-.avatar{width:55px;height:55px;border-radius:50%;background:linear-gradient(135deg,#f7d3c8,#b9a1df);display:grid;place-items:center;font-weight:700;font-size:20px}
-.info{flex:1}.name{font-size:18px;font-weight:650}.preview{color:#777;margin-top:4px;font-size:14px}.time{color:#999;font-size:12px}
-button{border:0;border-radius:14px;padding:12px 16px;background:#111;color:#fff;font-size:16px;font-weight:600}
-.bottom{padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #ddd}
-.bottom button{width:100%}
-.screen{display:none;flex-direction:column;height:100%}.screen.active{display:flex}
-.back{font-size:18px;background:#eee;color:#111;margin-right:8px}.bar{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid #ddd}.bar h2{margin:0;font-size:20px}
-.messages{flex:1;padding:20px;overflow:auto;background:#fafafa}.bubble{max-width:82%;padding:11px 14px;border-radius:18px;background:#fff;margin:8px 0;box-shadow:0 1px 3px #ddd}.me{margin-left:auto;background:#e8dcff}
-.compose{display:flex;gap:8px;padding:10px;border-top:1px solid #ddd}.compose input{flex:1;border:1px solid #ccc;border-radius:18px;padding:11px 14px;font-size:16px}
-.profile{padding:22px;overflow:auto}.card{background:#f7f7f8;border-radius:18px;padding:18px;margin-bottom:14px}.choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.choice{background:white;color:#222;border:1px solid #ddd;padding:9px 12px;border-radius:20px;font-size:14px}.choice.selected{background:#111;color:white;border-color:#111}
-label{display:block;font-weight:600;margin-top:15px}.profile input{width:100%;margin-top:7px;padding:12px;border:1px solid #ccc;border-radius:12px;font-size:16px}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f2f7;color:#222}
+.app{max-width:520px;margin:auto;height:100vh;background:#fff;display:flex;flex-direction:column}
+header,.bar{background:#7b4bb7;color:#fff;padding:18px 16px}.title{font-size:22px;font-weight:700}.sub{opacity:.8;font-size:13px;margin-top:3px}
+.screen{display:none;flex:1;overflow:auto}.screen.active{display:flex;flex-direction:column}
+.list{padding:8px}.chatrow{display:flex;align-items:center;padding:13px 10px;border-bottom:1px solid #eee;cursor:pointer}
+.avatar{width:54px;height:54px;border-radius:50%;background:#eadcff;display:grid;place-items:center;font-weight:700;font-size:22px;margin-right:12px;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}.info{flex:1}.name{font-weight:700}.preview{color:#777;font-size:14px;margin-top:3px}
+.bottom{padding:12px;border-top:1px solid #eee}.bottom button,.savebtn{width:100%;border:0;border-radius:12px;background:#7b4bb7;color:#fff;padding:14px;font-size:16px;font-weight:600}
+.bar{display:flex;align-items:center;gap:10px}.back{border:0;background:transparent;color:white;font-size:32px}.bar h2{margin:0;font-size:19px}
+.profile{padding:14px}.card{background:#fafafa;border:1px solid #eee;border-radius:14px;padding:14px;margin-bottom:12px}
+label,b{display:block;margin-bottom:7px;font-weight:650}input,textarea{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;margin-bottom:12px}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.choice{border:1px solid #ccc;background:#fff;padding:9px 12px;border-radius:20px}.choice.selected{background:#7b4bb7;color:#fff;border-color:#7b4bb7}
+.avatar-preview{width:90px;height:90px;border-radius:50%;background:#eee;display:grid;place-items:center;margin:10px auto 14px;overflow:hidden;font-size:30px;color:#888}.avatar-preview img{width:100%;height:100%;object-fit:cover}
+#messages{flex:1;padding:14px;overflow:auto;background:#f4f1f6}.bubble{max-width:82%;padding:11px 14px;border-radius:18px;background:#fff;margin:8px 0;box-shadow:0 1px 3px #ddd;white-space:pre-wrap}.bubble.me{margin-left:auto;background:#e7d7ff}.typing{color:#777;font-style:italic}
+.composer{display:flex;gap:8px;padding:10px;border-top:1px solid #ddd;background:#fff}.composer input{margin:0;flex:1}.composer button{border:0;background:#7b4bb7;color:white;border-radius:12px;padding:0 17px;font-size:20px}
 </style>
 </head>
 <body>
 <div class="app">
-  <div id="home" class="screen active">
-    <header>AI-Freundin<div class="sub">Deine Charaktere & Chats</div></header>
-    <div class="list">
-      <div class="chat" onclick="openChat('Silvana')">
-        <div class="avatar">S</div><div class="info"><div class="name">Silvana</div><div class="preview">Hey 😊 Wie geht's dir?</div></div><div class="time">16:32</div>
-      </div>
-      <div class="chat" onclick="openChat('Lisa')">
-        <div class="avatar">L</div><div class="info"><div class="name">Lisa</div><div class="preview">Hallo! Schön, dass du da bist.</div></div><div class="time">15:48</div>
-      </div>
-    </div>
-    <div class="bottom"><button onclick="show('create')">＋ Charakter erstellen</button></div>
-  </div>
 
-  <div id="create" class="screen">
-    <div class="bar"><button class="back" onclick="show('home')">‹</button><h2>Charakter erstellen</h2></div>
-    <div class="profile">
-      <div class="card">
-        <label>Name</label><input id="cname" value="Silvana">
-        <label>Alter</label><input id="age" type="number" value="34">
-      </div>
-      <div class="card"><b>Persönlichkeiten</b><div class="choices">
-        <button class="choice selected">Dominant</button><button class="choice">Rebellisch</button><button class="choice">Frech</button><button class="choice">Verspielt</button><button class="choice">Sexy</button>
-      </div></div>
-      <div class="card"><b>Frisur</b><div class="choices">
-        <button class="choice selected">Geflochtener Pferdeschwanz</button><button class="choice">Offen</button><button class="choice">Dutt</button><button class="choice">Bob</button>
-      </div><b style="display:block;margin-top:15px">Haarlänge</b><div class="choices">
-        <button class="choice selected">Mid Length</button><button class="choice">Kurz</button><button class="choice">Lang</button>
-      </div></div>
-      <div class="card"><b>Interessen & Eigenschaften</b><div class="choices">
-        <button class="choice selected">Auto verrückt</button><button class="choice selected">Kellnerin</button><button class="choice selected">Mutter</button><button class="choice selected">Versaut</button><button class="choice selected">Verführerisch</button>
-      </div></div>
-      <button onclick="saveCharacter()">Charakter speichern</button>
-    </div>
-  </div>
+<section id="home" class="screen active">
+<header><div class="title">AI-Freundin</div><div class="sub">Deine Charaktere & Chats</div></header>
+<div class="list" id="characterList"></div>
+<div class="bottom"><button onclick="startCreate()">＋ Charakter erstellen</button></div>
+</section>
 
-  <div id="chat" class="screen">
-    <div class="bar"><button class="back" onclick="show('home')">‹</button><div class="avatar" style="width:42px;height:42px;font-size:16px">S</div><h2 id="chatname" style="margin-left:10px">Silvana</h2></div>
-    <div class="messages" id="messages"><div class="bubble">Hey 😊 Ich bin Silvana. Schön, dass du da bist!</div><div class="bubble">Wie möchtest du unseren Chat starten?</div></div>
-    <div class="compose"><input id="msg" placeholder="Nachricht schreiben…" onkeydown="if(event.key==='Enter')send()"><button onclick="send()">➤</button></div>
-  </div>
+<section id="create" class="screen">
+<div class="bar"><button class="back" onclick="show('home')">‹</button><h2>Neuer Charakter</h2></div>
+<div class="profile">
+<div class="card">
+<label>📷 Bild / Avatar</label>
+<input id="avatarFile" type="file" accept="image/*" onchange="previewAvatar(event)">
+<div id="avatarPreview" class="avatar-preview">+</div>
+</div>
+
+<div class="card">
+<label>Name</label><input id="cname" placeholder="z. B. Silvana">
+<label>Alter (18–99)</label><input id="age" type="number" min="18" max="99" placeholder="18–99">
+<label>Geschlecht</label>
+<div class="choices" id="genderChoices">
+<button type="button" class="choice" data-group="gender" onclick="selectOne(this)">Männlich</button>
+<button type="button" class="choice" data-group="gender" onclick="selectOne(this)">Weiblich</button>
+</div>
+</div>
+
+<div class="card"><b>Persönlichkeit</b><div class="choices">
+<button class="choice" onclick="toggleChoice(this)">Liebevoll</button><button class="choice" onclick="toggleChoice(this)">Frech</button><button class="choice" onclick="toggleChoice(this)">Humorvoll</button><button class="choice" onclick="toggleChoice(this)">Schüchtern</button><button class="choice" onclick="toggleChoice(this)">Selbstbewusst</button><button class="choice" onclick="toggleChoice(this)">Dominant</button><button class="choice" onclick="toggleChoice(this)">Verspielt</button><button class="choice" onclick="toggleChoice(this)">Romantisch</button><button class="choice" onclick="toggleChoice(this)">Rebellisch</button><button class="choice" onclick="toggleChoice(this)">Energisch</button>
+</div></div>
+
+<div class="card"><b>Aussehen</b>
+<label>Haarfarbe</label><div class="choices field"><button class="choice" onclick="selectField(this)">Blond</button><button class="choice" onclick="selectField(this)">Braun</button><button class="choice" onclick="selectField(this)">Schwarz</button><button class="choice" onclick="selectField(this)">Rot</button></div>
+<label>Frisur</label><div class="choices field"><button class="choice" onclick="selectField(this)">Offen</button><button class="choice" onclick="selectField(this)">Geflochtener Pferdeschwanz</button><button class="choice" onclick="selectField(this)">Pferdeschwanz</button><button class="choice" onclick="selectField(this)">Dutt</button><button class="choice" onclick="selectField(this)">Bob</button></div>
+<label>Haarlänge</label><div class="choices field"><button class="choice" onclick="selectField(this)">Kurz</button><button class="choice" onclick="selectField(this)">Mid Length</button><button class="choice" onclick="selectField(this)">Lang</button></div>
+<label>Augenfarbe</label><div class="choices field"><button class="choice" onclick="selectField(this)">Blau</button><button class="choice" onclick="selectField(this)">Grün</button><button class="choice" onclick="selectField(this)">Braun</button><button class="choice" onclick="selectField(this)">Grau</button></div>
+<label>Brustgröße</label><div class="choices field"><button class="choice" onclick="selectField(this)">Klein</button><button class="choice" onclick="selectField(this)">Mittel</button><button class="choice" onclick="selectField(this)">Groß</button></div>
+<label>Figur</label><div class="choices field"><button class="choice" onclick="selectField(this)">Schlank</button><button class="choice" onclick="selectField(this)">Sportlich</button><button class="choice" onclick="selectField(this)">Kurvig</button><button class="choice" onclick="selectField(this)">Kräftig</button></div>
+<label>Po-Form</label><div class="choices field"><button class="choice" onclick="selectField(this)">Klein</button><button class="choice" onclick="selectField(this)">Rund</button><button class="choice" onclick="selectField(this)">Sportlich</button><button class="choice" onclick="selectField(this)">Ausgeprägt</button></div>
+</div>
+
+<div class="card"><b>Interessen</b><div class="choices">
+<button class="choice" onclick="toggleChoice(this)">Auto</button><button class="choice" onclick="toggleChoice(this)">Gaming</button><button class="choice" onclick="toggleChoice(this)">Sport</button><button class="choice" onclick="toggleChoice(this)">Musik</button><button class="choice" onclick="toggleChoice(this)">Reisen</button><button class="choice" onclick="toggleChoice(this)">Kochen</button><button class="choice" onclick="toggleChoice(this)">Filme</button><button class="choice" onclick="toggleChoice(this)">Natur</button>
+</div></div>
+
+<div class="card"><label>Charakterbeschreibung</label><textarea id="description" rows="5" placeholder="Sie ist selbstbewusst, liebt Autos und macht gerne Witze."></textarea></div>
+<button class="savebtn" onclick="saveCharacter()">Charakter speichern</button>
+</div>
+</section>
+
+<section id="chat" class="screen">
+<div class="bar"><button class="back" onclick="show('home')">‹</button><div class="avatar">S</div><h2 id="chatname">Silvana</h2></div>
+<div id="messages"></div>
+<div class="composer"><input id="msg" placeholder="Nachricht schreiben …" autocomplete="off"><button onclick="send()">➤</button></div>
+</section>
+
 </div>
 <script>
-function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active')}
-function openChat(name){document.getElementById('chatname').textContent=name;show('chat')}
-function send(){const i=document.getElementById('msg');if(!i.value.trim())return;const m=document.getElementById('messages');const b=document.createElement('div');b.className='bubble me';b.textContent=i.value;m.appendChild(b);i.value='';m.scrollTop=m.scrollHeight;setTimeout(()=>{const r=document.createElement('div');r.className='bubble';r.textContent='Klingt gut 😊 Erzähl mir mehr!';m.appendChild(r);m.scrollTop=m.scrollHeight},500)}
-document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>b.classList.toggle('selected'))
-function saveCharacter(){const n=document.getElementById('cname').value||'Neuer Charakter';alert(n+' wurde gespeichert.');show('home')}
+const defaultChars=[
+{name:"Silvana",avatar:"S",personality:["Dominant","Frech","Verspielt"],interests:["Auto"]},
+{name:"Lisa",avatar:"L",personality:["Liebevoll","Humorvoll"],interests:["Musik","Reisen"]}
+];
+let chars=JSON.parse(localStorage.getItem("af_chars")||"null")||defaultChars;
+let chats=JSON.parse(localStorage.getItem("af_chats")||"{}");
+let current="";
+let memory=JSON.parse(localStorage.getItem("af_memory")||"{}");
+
+function saveAll(){localStorage.setItem("af_chars",JSON.stringify(chars));localStorage.setItem("af_chats",JSON.stringify(chats));localStorage.setItem("af_memory",JSON.stringify(memory))}
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active")}
+function toggleChoice(x){x.classList.toggle("selected")}
+function selectOne(x){document.querySelectorAll('[data-group="'+x.dataset.group+'"]').forEach(y=>y.classList.remove("selected"));x.classList.add("selected")}
+function selectField(x){x.parentElement.querySelectorAll(".choice").forEach(y=>y.classList.remove("selected"));x.classList.add("selected")}
+function selectedIn(el){return [...el.querySelectorAll(".selected")].map(x=>x.textContent.trim())}
+function previewAvatar(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{document.getElementById("avatarPreview").innerHTML='<img src="'+r.result+'">';document.getElementById("avatarPreview").dataset.src=r.result};r.readAsDataURL(f)}
+function startCreate(){document.getElementById("cname").value="";document.getElementById("age").value="";document.getElementById("description").value="";document.getElementById("avatarFile").value="";document.getElementById("avatarPreview").innerHTML="+";document.getElementById("avatarPreview").dataset.src="";document.querySelectorAll("#create .choice").forEach(x=>x.classList.remove("selected"));show("create")}
+function renderList(){let box=document.getElementById("characterList");box.innerHTML="";chars.forEach(c=>{let row=document.createElement("div");row.className="chatrow";row.onclick=()=>openChat(c.name);let av=document.createElement("div");av.className="avatar";if(c.avatar&&c.avatar.length>2)av.innerHTML='<img src="'+c.avatar+'">';else av.textContent=c.avatar||c.name[0];let info=document.createElement("div");info.className="info";info.innerHTML='<div class="name"></div><div class="preview"></div>';info.querySelector(".name").textContent=c.name;info.querySelector(".preview").textContent=c.personality?.join(", ")||"Neuer Charakter";row.append(av,info);box.appendChild(row)})}
+function saveCharacter(){let name=document.getElementById("cname").value.trim(),age=+document.getElementById("age").value,gender=document.querySelector("#genderChoices .selected")?.textContent.trim();if(!name)return alert("Bitte einen Namen eingeben.");if(age<18||age>99)return alert("Alter muss zwischen 18 und 99 liegen.");if(!gender)return alert("Bitte ein Geschlecht auswählen.");let cards=document.querySelectorAll("#create .card"),appearance=cards[3];let fields=[...appearance.querySelectorAll(".field")].map(x=>x.querySelector(".selected")?.textContent.trim()||"");let c={name,age,gender,avatar:document.getElementById("avatarPreview").dataset.src||name[0].toUpperCase(),personality:selectedIn(cards[2]),appearance:{hairColor:fields[0],hairstyle:fields[1],hairLength:fields[2],eyeColor:fields[3],breastSize:fields[4],figure:fields[5],buttShape:fields[6]},interests:selectedIn(cards[4]),description:document.getElementById("description").value.trim()};chars=chars.filter(x=>x.name.toLowerCase()!=name.toLowerCase());chars.push(c);if(!chats[name])chats[name]=[{from:"her",text:"Hey 😊 Ich bin "+name+". Schön, dass du da bist!"},{from:"her",text:c.description||"Erzähl mir etwas über dich – ich möchte dich kennenlernen."}];saveAll();renderList();openChat(name)}
+function openChat(name){current=name;document.getElementById("chatname").textContent=name;if(!chats[name])chats[name]=[{from:"her",text:"Hey 😊 Schön, dass du da bist!"}];renderMessages();show("chat")}
+function renderMessages(){let b=document.getElementById("messages");b.innerHTML="";chats[current].forEach(x=>addBubble(x.text,x.from=="me"?"me":""));b.scrollTop=999999}
+function addBubble(t,c=""){let b=document.createElement("div");b.className="bubble "+c;b.textContent=t;document.getElementById("messages").appendChild(b)}
+function topic(t){let l=t.toLowerCase();if(/\b(auto|bmw|audi|mercedes|vw|wagen)\b/.test(l))return"auto";if(/\b(musik|song|lied|band)\b/.test(l))return"musik";if(/\b(essen|pizza|burger|kochen)\b/.test(l))return"essen";if(/\b(urlaub|reise|reisen|meer)\b/.test(l))return"reise";if(/\b(gaming|spiel|zocken|xbox|playstation)\b/.test(l))return"gaming";return""}
+function answer(t){let l=t.toLowerCase(),c=chars.find(x=>x.name==current)||{},tp=topic(t),h=chats[current],last=[...h].reverse().find(x=>x.from=="her");if(/^(hi|hallo|hey|moin|servus)\b/.test(l))return"Hey 😊 Schön, dass du da bist. Wie war dein Tag?";if(l.includes("wie geht"))return"Mir geht's gut 😊 Und wie geht es dir wirklich?";if(l.includes("wer bist du")||l.includes("wie heißt du"))return"Ich bin "+current+" 😊 Du kannst mir alles erzählen und mich alles fragen.";if(l.includes("was machst du"))return"Gerade bin ich hier bei dir im Chat 😊 Was machst du denn gerade?";if(/^(ja|jap|jo)\b/.test(l))return last?"Okay 😊 Dann machen wir da weiter. "+(last.text.includes("?")?"Was denkst du darüber?":"Erzähl mir noch ein bisschen mehr."):"Sehr gern 😊";if(/^(nein|nee|ne)\b/.test(l))return"Okay 😊 Dann lassen wir das. Worüber möchtest du stattdessen reden?";if(tp=="auto")return"Autos? 😏 Da bin ich neugierig. Was fährst du gerade oder welches Auto gefällt dir am besten?";if(tp=="musik")return"Musik ist immer ein gutes Thema 🎵 Was hörst du gerade am liebsten?";if(tp=="essen")return"Jetzt bekomme ich Hunger 😋 Was ist dein Lieblingsessen?";if(tp=="reise")return"Reisen klingt gut ✈️ Wohin würdest du sofort fahren, wenn du morgen loskönntest?";if(tp=="gaming")return"Gaming 🎮 Klingt gut. Was spielst du gerade am liebsten?";if(/[?]$/.test(t))return"Gute Frage 😊 Ich gehe darauf ein: Du meinst „"+t.replace(/[?]+$/,"")+"“. Was ist dir daran besonders wichtig?";if(/\b(stress|traurig|einsam|müde|genervt)\b/.test(l))return"Das klingt nicht nach einem einfachen Tag 😕 Erzähl mir, was passiert ist.";if(/\b(gut|super|glücklich|happy)\b/.test(l))return"Das klingt gut 😊 Was ist denn passiert?";let pool=["Interessant 😊 Erzähl mir dazu noch etwas mehr.","Okay, jetzt bin ich neugierig 😄 Wie meinst du das genau?","Das habe ich verstanden. Was denkst du persönlich darüber?","Mhm 😊 Ich höre dir zu. Was ist dir daran besonders wichtig?"];return pool[Math.floor(Math.random()*pool.length)]}
+function send(){let i=document.getElementById("msg"),t=i.value.trim();if(!t)return;chats[current].push({from:"me",text:t});addBubble(t,"me");i.value="";let b=document.getElementById("messages");b.scrollTop=999999;let ty=document.createElement("div");ty.id="typing";ty.className="bubble typing";ty.textContent="schreibt …";b.appendChild(ty);setTimeout(()=>{ty.remove();let r=answer(t);chats[current].push({from:"her",text:r});addBubble(r);saveAll();b.scrollTop=999999},700+Math.random()*700)}
+document.getElementById("msg").addEventListener("keydown",e=>{if(e.key=="Enter"){e.preventDefault();send()}})
+renderList();openChat("Silvana");
 </script>
-</body>
-</html>
+</body></html>
