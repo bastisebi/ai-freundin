@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>KI Freundinnen</title>
+<style>
+:root{--bg:#0b141a;--h:#1f2c33;--l:#2a3942;--t:#e9edef;--m:#8696a0;--g:#00a884;--g2:#25d366;--b:#005c4b}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#000;color:var(--t)}
+.app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg)}
+.top{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--h);position:sticky;top:0;z-index:20}
+.top h1{font-size:18px;margin:0;flex:1;font-weight:650}
+.back,.ico{border:0;background:none;color:var(--g2);font-size:20px;cursor:pointer}
+.scr{display:none;padding-bottom:96px}
+.scr.on{display:block}
+.search{margin:10px 14px;background:#202c33;border-radius:10px;padding:10px 12px;color:var(--m)}
+.sec{padding:4px 16px 8px;color:var(--m);font-size:13px}
+.item{display:flex;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid #162026;cursor:pointer}
+.av{width:50px;height:50px;border-radius:50%;background:#334}
+.grow{flex:1;min-width:0}
+.muted{color:var(--m);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.time{color:var(--m);font-size:12px;text-align:right}
+.badge{margin-top:6px;background:var(--g2);color:#073;min-width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;margin-left:auto}
+.btn{display:block;width:calc(100% - 28px);margin:16px auto;background:var(--g2);color:#073012;border:0;border-radius:12px;padding:14px;font-weight:800;font-size:16px;cursor:pointer}
+.btn.alt{background:#16332c;color:var(--g2)}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:430px;display:grid;grid-template-columns:repeat(4,1fr);background:#111b21;border-top:1px solid var(--l);text-align:center;padding:8px 0 16px;font-size:11px;color:var(--m)}
+.tabs .on{color:var(--g2)}
+.chat{min-height:62vh;padding:12px;display:flex;flex-direction:column;gap:8px}
+.bub{max-width:80%;padding:8px 10px;border-radius:10px;font-size:14.5px;line-height:1.35}
+.them{background:#202c33;align-self:flex-start}
+.me{background:var(--b);align-self:flex-end}
+.st{font-size:11px;color:#99a;margin-top:4px}
+.composer{position:sticky;bottom:0;display:flex;gap:8px;align-items:center;padding:8px;background:var(--h)}
+.composer input{flex:1;margin:0;border:0;background:#2a3942;color:#fff;border-radius:22px;padding:10px 14px}
+.mic{width:42px;height:42px;border-radius:50%;background:var(--g2);border:0}
+label{display:block;margin:10px 14px 5px;font-size:12px;color:var(--m)}
+input,textarea,select{width:calc(100% - 28px);margin:0 14px;display:block;background:#152026;border:1px solid var(--l);color:#fff;border-radius:10px;padding:11px}
+.box{margin:10px 14px;background:#12201c;border:1px solid #1e3a32;border-radius:12px;padding:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#1b2a27;border:1px solid #2a3f38;border-radius:999px;padding:7px 11px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--g);border-color:var(--g2)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;cursor:pointer}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 14px}
+.sw{width:44px;height:24px;background:#445;border-radius:99px;position:relative}
+.sw.on{background:var(--g2)}
+.sw i{position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px}
+.sw.on i{left:23px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 14px}
+.card{background:#161f24;border:2px solid transparent;border-radius:12px;overflow:hidden;text-align:center;font-size:12px;cursor:pointer;padding-bottom:6px}
+.card.on{border-color:var(--g2)}
+.ph{height:100px;background:#243138;display:grid;place-items:end center;padding-bottom:8px;color:#cde}
+.preview{width:110px;height:110px;border-radius:50%;border:3px solid var(--g2);margin:12px auto;background:#234}
+.dots{display:flex;gap:10px;padding:8px 0;flex-wrap:wrap}
+.dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+.dot.on{border-color:#fff}
+input[type=range]{accent-color:var(--g2)}
+.hint{color:var(--m);font-size:12px;padding:0 14px 10px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <button class="back" id="back">←</button>
+  <h1 id="title">KI Freundinnen</h1>
+  <button class="ico">✎</button>
+</header>
+
+<section class="scr on" id="chats">
+  <div class="search">Suchen</div>
+  <div class="sec">Alle Chats</div>
+  <div class="item" onclick="go('chat')"><div class="av"></div><div class="grow"><b>Lina</b><div class="muted">Hey! Wie war dein Tag bisher?</div></div><div><div class="time">09:38</div><div class="badge">2</div></div></div>
+  <div class="item" onclick="go('chat')"><div class="av"></div><div class="grow"><b>Mira</b><div class="muted">Das klingt nach einem Plan!</div></div><div><div class="time">09:15</div><div class="badge">1</div></div></div>
+  <div class="item" onclick="go('chat')"><div class="av"></div><div class="grow"><b>Anna</b><div class="muted">Ich habe heute so viel geschafft!</div></div><div><div class="time">Gestern</div><div class="badge">3</div></div></div>
+  <div class="item" onclick="go('chat')"><div class="av"></div><div class="grow"><b>Sophie</b><div class="muted">Erzaehl mal, was gibt's Neues?</div></div><div><div class="time">Gestern</div><div class="badge">1</div></div></div>
+  <button class="btn" onclick="go('create')">+ Neue Freundin erstellen</button>
+  <nav class="tabs"><div class="on">Chats</div><div>Aktuelles</div><div>Entdecken</div><div>Ich</div></nav>
+</section>
+
+<section class="scr" id="chat">
+  <div class="chat">
+    <div class="bub them">Hey du<br>Wie war dein Tag?<div class="st">21:32</div></div>
+    <div class="bub me">Hey Lena! War ganz okay, bisschen stressig aber jetzt entspannt.<div class="st">21:34</div></div>
+    <div class="bub them">Klingt nach einem Tag, der einen Wein verdient hat<div class="st">21:36</div></div>
+    <div class="bub me">Gute Idee! Ich bleib beim Tee.<div class="st">21:37</div></div>
+    <div class="bub them">Ich hab Karten fuer s Konzert Samstag! Kommst du mit?<div class="st">21:42</div></div>
+    <div class="bub me">Sehr gern! Ich bin dabei.<div class="st">21:43</div></div>
+  </div>
+  <div class="composer"><input id="msg" placeholder="Nachricht schreiben" /><button class="mic" onclick="send()">S</button></div>
+</section>
+
+<section class="scr" id="create">
+  <p class="hint">Gestalte deine perfekte weibliche Begleitung.</p>
+  <div class="box row" onclick="go('look')"><b>Aussehen festlegen</b>›</div>
+  <div class="box"><label style="margin:0 0 6px">Name</label><input style="width:100%;margin:0" placeholder="z. B. Lea, Mia, Sophia..."></div>
+  <div class="split">
+    <div class="box"><label style="margin:0 0 6px">Alter</label><input type="number" min="18" max="99" value="24" style="width:100%;margin:0"></div>
+    <div class="box"><label style="margin:0 0 6px">Beziehungsart</label>
+      <div class="chips" data-m><span class="chip on">Freundin</span><span class="chip">FWB</span><span class="chip">Ehefrau</span><span class="chip">Affaere</span><span class="chip">Online-Only</span></div>
+    </div>
+  </div>
+  <div class="box"><label style="margin:0 0 6px">Beruf</label><input style="width:100%;margin:0" placeholder="z. B. Grafikdesignerin..."></div>
+  <div class="box"><label style="margin:0 0 6px">Backstory (optional)</label><textarea style="width:100%;margin:0" placeholder="Ihre Geschichte..."></textarea></div>
+  <div class="box"><label style="margin:0 0 6px">Persoenlichkeit</label><input style="width:100%;margin:0" placeholder="charmant, dominant, fuersorglich..."></div>
+  <div class="split">
+    <div class="box row" onclick="go('prefs')"><b>Sexuelle Vorlieben</b>›</div>
+    <div class="box row" onclick="go('libido')"><b>Libido</b>›</div>
+  </div>
+  <div class="box"><label style="margin:0 0 6px">Interessen</label><input style="width:100%;margin:0" placeholder="Reisen, Fitness, Kunst..."></div>
+  <div class="box row"><span>18+ NSFW erlauben</span><div class="sw on" onclick="this.classList.toggle('on')"><i></i></div></div>
+  <button class="btn" onclick="alert('Demo gespeichert');go('chats')">Freundin erstellen</button>
+</section>
+
+<section class="scr" id="look">
+  <p class="hint">Passe das Aussehen an</p>
+  <div class="preview"></div>
+  <button class="btn alt">Bild hochladen</button>
+  <button class="btn alt">Bild generieren</button>
+  <div class="box">
+    <div class="row" onclick="go('body')"><b>Koerperbau</b>›</div>
+    <div class="row" onclick="go('bust')"><b>Brust individuell</b>›</div>
+    <div class="row" onclick="go('hair')"><b>Haar</b>›</div>
+    <div class="row" onclick="go('face')"><b>Gesichtszuege</b>›</div>
+    <div class="row" onclick="go('skin')"><b>Haut</b>›</div>
+  </div>
+  <button class="btn" onclick="go('create')">Uebernehmen</button>
+</section>
+
+<section class="scr" id="body">
+  <p class="hint">Waehle den Koerperbau</p>
+  <div class="g4" id="bodies"></div>
+  <button class="btn" onclick="go('look')">Uebernehmen</button>
+</section>
+
+<section class="scr" id="bust">
+  <div class="box"><div class="ph" style="height:160px;border-radius:8px">Vorschau</div></div>
+  <div class="box"><label style="margin:0">Groesse</label><input type="range" min="0" max="100" value="40" style="width:100%;margin:8px 0 0"></div>
+  <div class="box"><label style="margin:0">Festigkeit</label><input type="range" min="0" max="100" value="70" style="width:100%;margin:8px 0 0"></div>
+  <div class="box"><label style="margin:0">Abstand</label><input type="range" min="0" max="100" value="75" style="width:100%;margin:8px 0 0"></div>
+  <div class="box"><label style="margin:0 0 8px">Form</label>
+    <div class="chips"><span class="chip on">Stehend</span><span class="chip">Tropfen</span><span class="chip">Rund</span><span class="chip">Haengend</span></div>
+  </div>
+  <div class="box row"><span>Links / rechts getrennt</span><div class="sw" onclick="this.classList.toggle('on')"><i></i></div></div>
+  <button class="btn" onclick="go('look')">Uebernehmen</button>
+</section>
+
+<section class="scr" id="hair">
+  <div class="box" style="display:flex;gap:12px;align-items:center"><div class="preview" style="margin:0"></div><div><div class="muted">Vorschau</div><b id="hlen">Lang</b></div></div>
+  <div class="box"><label style="margin:0">Haarlaenge</label><input id="hairLen" type="range" min="0" max="4" value="3" style="width:100%;margin:8px 0 0"></div>
+  <div class="box"><label style="margin:0 0 8px">Passende Frisuren</label><div class="grid" id="styles"></div></div>
+  <div class="box"><label style="margin:0 0 8px">Haarfarbe</label>
+    <div class="dots">
+      <div class="dot on" style="background:#2a1a12"></div><div class="dot" style="background:#4a2e1c"></div>
+      <div class="dot" style="background:#7a4a28"></div><div class="dot" style="background:#c9a36a"></div>
+      <div class="dot" style="background:#333"></div>
+    </div>
+  </div>
+  <div class="box"><label style="margin:0 0 8px">Locken</label>
+    <div class="chips"><span class="chip">Glatt</span><span class="chip on">Wellen</span><span class="chip">Locken</span></div>
+  </div>
+  <button class="btn" onclick="go('look')">Uebernehmen</button>
+</section>
+
+<section class="scr" id="face">
+  <div class="preview"></div>
+  <div class="split"><button class="btn alt" style="width:auto;margin:0">Automatisch</button><button class="btn alt" style="width:auto;margin:0">Bild einfuegen</button></div>
+  <div class="box"><label style="margin:0 0 8px">Augenfarbe</label>
+    <div class="dots">
+      <div class="dot on" style="background:#5a3a1a"></div><div class="dot" style="background:#2f7a3a"></div>
+      <div class="dot" style="background:#2a62c4"></div><div class="dot" style="background:#7a7a7a"></div>
+      <div class="dot" style="background:#c47a18"></div>
+    </div>
+  </div>
+  <div class="box"><label style="margin:0 0 6px">Optionale Wuensche</label><textarea style="width:100%;margin:0" placeholder="z. B. leichtes Laecheln..."></textarea></div>
+  <button class="btn" onclick="go('look')">Uebernehmen</button>
+</section>
+
+<section class="scr" id="skin">
+  <div class="box"><div class="chips"><span class="chip">Hell</span><span class="chip on">Mittel</span><span class="chip">Oliv</span><span class="chip">Braun</span><span class="chip">Dunkel</span></div></div>
+  <button class="btn" onclick="go('look')">Uebernehmen</button>
+</section>
+
+<section class="scr" id="prefs">
+  <div class="box"><div class="chips" data-m>
+    <span class="chip">Kuessen</span><span class="chip">Blowjob</span><span class="chip">Creampie</span>
+    <span class="chip">Breeding</span><span class="chip">Fetisch</span><span class="chip">Oral</span>
+    <span class="chip">Anal</span><span class="chip">Roleplay</span><span class="chip">Dirty Talk</span>
+  </div></div>
+  <button class="btn" onclick="go('create')">Uebernehmen</button>
+</section>
+
+<section class="scr" id="libido">
+  <div class="box"><div class="chips" data-m>
+    <span class="chip">niedrig</span><span class="chip on">mittel</span><span class="chip">hoch</span>
+    <span class="chip">Nymphomanin</span><span class="chip">hypersexuell</span>
+  </div></div>
+  <button class="btn" onclick="go('create')">Uebernehmen</button>
+</section>
+</div>
+<script>
+const titles={chats:'KI Freundinnen',chat:'Lena',create:'Neue Freundin erstellen',look:'Aussehen festlegen',body:'Koerperbau waehlen',bust:'Brust individuell',hair:'Haar festlegen',face:'Gesicht erstellen',skin:'Haut',prefs:'Sexuelle Vorlieben',libido:'Libido'};
+const backMap={chat:'chats',create:'chats',look:'create',body:'look',bust:'look',hair:'look',face:'look',skin:'look',prefs:'create',libido:'create'};
+function go(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('title').textContent=titles[id];window.scrollTo(0,0)}
+document.getElementById('back').onclick=()=>{const id=document.querySelector('.scr.on').id;go(backMap[id]||'chats')};
+document.querySelectorAll('.chips').forEach(g=>g.addEventListener('click',e=>{if(!e.target.classList.contains('chip'))return;if(g.dataset.m)e.target.classList.toggle('on');else{g.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));e.target.classList.add('on')}}));
+document.querySelectorAll('.dots').forEach(g=>g.addEventListener('click',e=>{if(!e.target.classList.contains('dot'))return;g.querySelectorAll('.dot').forEach(c=>c.classList.remove('on'));e.target.classList.add('on')}));
+document.getElementById('bodies').innerHTML=['Skinny','Schlank','Athletisch','Kurvig','Sanduhr','Birne','Rechteck','BBW'].map((n,i)=>'<div class="card'+(i===7?' on':'')+'"><div class="ph">'+n+'</div>'+n+'</div>').join('');
+document.getElementById('bodies').onclick=e=>{const c=e.target.closest('.card');if(!c)return;document.querySelectorAll('#bodies .card').forEach(x=>x.classList.remove('on'));c.classList.add('on')};
+const byLen={0:['Pixie','Kurz'],1:['Bob','Pony','Offen'],2:['Lob','Offen','Halb hoch'],3:['Offen','Pferdeschwanz','Dutt','Zopf','Beach Waves','High Ponytail'],4:['Offen','Pferdeschwanz','Zopf','Geflochten']};
+const labs=['Sehr kurz','Kurz','Mittel','Lang','Sehr lang'];
+function styles(){const v=+document.getElementById('hairLen').value;document.getElementById('hlen').textContent=labs[v];document.getElementById('styles').innerHTML=byLen[v].map((s,i)=>'<div class="card'+(i?'':' on')+'"><div class="ph">'+s+'</div>'+s+'</div>').join('')}
+document.getElementById('hairLen').oninput=styles;styles();
+document.getElementById('styles').onclick=e=>{const c=e.target.closest('.card');if(!c)return;document.querySelectorAll('#styles .card').forEach(x=>x.classList.remove('on'));c.classList.add('on')};
+function send(){const i=document.getElementById('msg');if(!i.value.trim())return;const d=document.createElement('div');d.className='bub me';d.innerHTML=i.value+'<div class="st">jetzt</div>';document.querySelector('.chat').appendChild(d);i.value='';}
+</script>
+</body>
+</html>
