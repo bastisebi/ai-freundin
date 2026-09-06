@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI-Freundin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f7;color:#171717}
+.app{max-width:520px;margin:auto;height:100vh;background:white;display:flex;flex-direction:column}
+header{padding:18px 18px 12px;border-bottom:1px solid #ddd;font-size:25px;font-weight:700}
+.sub{font-size:13px;color:#777;font-weight:400;margin-top:3px}
+.list{flex:1;overflow:auto}.chat{display:flex;gap:12px;padding:15px 18px;border-bottom:1px solid #eee;align-items:center}
+.avatar{width:55px;height:55px;border-radius:50%;background:linear-gradient(135deg,#f7d3c8,#b9a1df);display:grid;place-items:center;font-weight:700;font-size:20px}
+.info{flex:1}.name{font-size:18px;font-weight:650}.preview{color:#777;margin-top:4px;font-size:14px}.time{color:#999;font-size:12px}
+button{border:0;border-radius:14px;padding:12px 16px;background:#111;color:#fff;font-size:16px;font-weight:600}
+.bottom{padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #ddd}
+.bottom button{width:100%}
+.screen{display:none;flex-direction:column;height:100%}.screen.active{display:flex}
+.back{font-size:18px;background:#eee;color:#111;margin-right:8px}.bar{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid #ddd}.bar h2{margin:0;font-size:20px}
+.messages{flex:1;padding:20px;overflow:auto;background:#fafafa}.bubble{max-width:82%;padding:11px 14px;border-radius:18px;background:#fff;margin:8px 0;box-shadow:0 1px 3px #ddd}.me{margin-left:auto;background:#e8dcff}
+.compose{display:flex;gap:8px;padding:10px;border-top:1px solid #ddd}.compose input{flex:1;border:1px solid #ccc;border-radius:18px;padding:11px 14px;font-size:16px}
+.profile{padding:22px;overflow:auto}.card{background:#f7f7f8;border-radius:18px;padding:18px;margin-bottom:14px}.choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.choice{background:white;color:#222;border:1px solid #ddd;padding:9px 12px;border-radius:20px;font-size:14px}.choice.selected{background:#111;color:white;border-color:#111}
+label{display:block;font-weight:600;margin-top:15px}.profile input{width:100%;margin-top:7px;padding:12px;border:1px solid #ccc;border-radius:12px;font-size:16px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="home" class="screen active">
+    <header>AI-Freundin<div class="sub">Deine Charaktere & Chats</div></header>
+    <div class="list">
+      <div class="chat" onclick="openChat('Silvana')">
+        <div class="avatar">S</div><div class="info"><div class="name">Silvana</div><div class="preview">Hey 😊 Wie geht's dir?</div></div><div class="time">16:32</div>
+      </div>
+      <div class="chat" onclick="openChat('Lisa')">
+        <div class="avatar">L</div><div class="info"><div class="name">Lisa</div><div class="preview">Hallo! Schön, dass du da bist.</div></div><div class="time">15:48</div>
+      </div>
+    </div>
+    <div class="bottom"><button onclick="show('create')">＋ Charakter erstellen</button></div>
+  </div>
+
+  <div id="create" class="screen">
+    <div class="bar"><button class="back" onclick="show('home')">‹</button><h2>Charakter erstellen</h2></div>
+    <div class="profile">
+      <div class="card">
+        <label>Name</label><input id="cname" value="Silvana">
+        <label>Alter</label><input id="age" type="number" value="34">
+      </div>
+      <div class="card"><b>Persönlichkeiten</b><div class="choices">
+        <button class="choice selected">Dominant</button><button class="choice">Rebellisch</button><button class="choice">Frech</button><button class="choice">Verspielt</button><button class="choice">Sexy</button>
+      </div></div>
+      <div class="card"><b>Frisur</b><div class="choices">
+        <button class="choice selected">Geflochtener Pferdeschwanz</button><button class="choice">Offen</button><button class="choice">Dutt</button><button class="choice">Bob</button>
+      </div><b style="display:block;margin-top:15px">Haarlänge</b><div class="choices">
+        <button class="choice selected">Mid Length</button><button class="choice">Kurz</button><button class="choice">Lang</button>
+      </div></div>
+      <div class="card"><b>Interessen & Eigenschaften</b><div class="choices">
+        <button class="choice selected">Auto verrückt</button><button class="choice selected">Kellnerin</button><button class="choice selected">Mutter</button><button class="choice selected">Versaut</button><button class="choice selected">Verführerisch</button>
+      </div></div>
+      <button onclick="saveCharacter()">Charakter speichern</button>
+    </div>
+  </div>
+
+  <div id="chat" class="screen">
+    <div class="bar"><button class="back" onclick="show('home')">‹</button><div class="avatar" style="width:42px;height:42px;font-size:16px">S</div><h2 id="chatname" style="margin-left:10px">Silvana</h2></div>
+    <div class="messages" id="messages"><div class="bubble">Hey 😊 Ich bin Silvana. Schön, dass du da bist!</div><div class="bubble">Wie möchtest du unseren Chat starten?</div></div>
+    <div class="compose"><input id="msg" placeholder="Nachricht schreiben…" onkeydown="if(event.key==='Enter')send()"><button onclick="send()">➤</button></div>
+  </div>
+</div>
+<script>
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function openChat(name){document.getElementById('chatname').textContent=name;show('chat')}
+function send(){const i=document.getElementById('msg');if(!i.value.trim())return;const m=document.getElementById('messages');const b=document.createElement('div');b.className='bubble me';b.textContent=i.value;m.appendChild(b);i.value='';m.scrollTop=m.scrollHeight;setTimeout(()=>{const r=document.createElement('div');r.className='bubble';r.textContent='Klingt gut 😊 Erzähl mir mehr!';m.appendChild(r);m.scrollTop=m.scrollHeight},500)}
+document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>b.classList.toggle('selected'))
+function saveCharacter(){const n=document.getElementById('cname').value||'Neuer Charakter';alert(n+' wurde gespeichert.');show('home')}
+</script>
+</body>
+</html>
