@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI-Freundin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f7;color:#171717}
+.app{max-width:520px;margin:auto;height:100vh;background:white;display:flex;flex-direction:column}
+header{padding:18px 18px 12px;border-bottom:1px solid #ddd;font-size:25px;font-weight:700}
+.sub{font-size:13px;color:#777;font-weight:400;margin-top:3px}
+.list{flex:1;overflow:auto}.chat{display:flex;gap:12px;padding:15px 18px;border-bottom:1px solid #eee;align-items:center}
+.avatar{width:55px;height:55px;border-radius:50%;background:linear-gradient(135deg,#f7d3c8,#b9a1df);display:grid;place-items:center;font-weight:700;font-size:20px}
+.info{flex:1}.name{font-size:18px;font-weight:650}.preview{color:#777;margin-top:4px;font-size:14px}.time{color:#999;font-size:12px}
+button{border:0;border-radius:14px;padding:12px 16px;background:#111;color:#fff;font-size:16px;font-weight:600}
+.bottom{padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #ddd}
+.bottom button{width:100%}
+.screen{display:none;flex-direction:column;height:100%}.screen.active{display:flex}
+.back{font-size:18px;background:#eee;color:#111;margin-right:8px}.bar{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid #ddd}.bar h2{margin:0;font-size:20px}
+.messages{flex:1;padding:20px;overflow:auto;background:#fafafa}.bubble{max-width:82%;padding:11px 14px;border-radius:18px;background:#fff;margin:8px 0;box-shadow:0 1px 3px #ddd;white-space:pre-wrap}.me{margin-left:auto;background:#e8dcff}.typing{color:#777;font-style:italic}
+.compose{display:flex;gap:8px;padding:10px;border-top:1px solid #ddd}.compose input{flex:1;border:1px solid #ccc;border-radius:18px;padding:11px 14px;font-size:16px}
+.profile{padding:22px;overflow:auto}.card{background:#f7f7f8;border-radius:18px;padding:18px;margin-bottom:14px}.choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.choice{background:white;color:#222;border:1px solid #ddd;padding:9px 12px;border-radius:20px;font-size:14px}.choice.selected{background:#111;color:white;border-color:#111}
+label{display:block;font-weight:600;margin-top:15px}.profile input{width:100%;margin-top:7px;padding:12px;border:1px solid #ccc;border-radius:12px;font-size:16px}
+
+textarea{width:100%;margin-top:7px;padding:12px;border:1px solid #ccc;border-radius:12px;font:inherit;resize:vertical}
+.avatar-preview{width:90px;height:90px;border-radius:50%;margin:14px auto 0;background:#eee;display:grid;place-items:center;font-size:34px;color:#777;overflow:hidden}
+.avatar-preview img{width:100%;height:100%;object-fit:cover}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="home" class="screen active">
+    <header>AI-Freundin<div class="sub">Deine Charaktere & Chats</div></header>
+    <div class="list" id="characterList"></div>
+    <div class="bottom"><button onclick="startCreate()">＋ Charakter erstellen</button></div>
+  </div>
+
+  <div id="create" class="screen">
+    <div class="bar"><button class="back" onclick="show('home')">‹</button><h2>Charakter erstellen</h2></div>
+    <div class="profile">
+      <div class="card">
+        <label>📷 Bild / Avatar</label>
+        <input id="avatarFile" type="file" accept="image/*" onchange="previewAvatar(event)">
+        <div id="avatarPreview" class="avatar-preview">+</div>
+      </div>
+
+      <div class="card">
+        <label>Name</label>
+        <input id="cname" placeholder="z. B. Silvana">
+
+        <label>Alter</label>
+        <input id="age" type="number" min="18" max="99" placeholder="18–99">
+
+        <label>Geschlecht</label>
+        <div class="choices" id="genderChoices">
+          <button type="button" class="choice" data-group="gender" onclick="selectOne(this)">Männlich</button>
+          <button type="button" class="choice" data-group="gender" onclick="selectOne(this)">Weiblich</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <b>Persönlichkeit</b>
+        <div class="choices">
+          <button type="button" class="choice" onclick="toggleChoice(this)">Liebevoll</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Frech</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Humorvoll</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Schüchtern</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Selbstbewusst</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Dominant</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Verspielt</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Romantisch</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Rebellisch</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Energisch</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <b>Aussehen</b>
+
+        <label>Haarfarbe</label>
+        <div class="choices">
+          <button type="button" class="choice" onclick="selectOne(this)">Blond</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Braun</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Schwarz</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Rot</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Andere</button>
+        </div>
+
+        <label>Frisur</label>
+        <div class="choices">
+          <button type="button" class="choice" onclick="selectOne(this)">Offen</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Geflochtener Pferdeschwanz</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Pferdeschwanz</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Dutt</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Bob</button>
+        </div>
+
+        <label>Haarlänge</label>
+        <div class="choices">
+          <button type="button" class="choice" onclick="selectOne(this)">Kurz</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Mid Length</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Lang</button>
+        </div>
+
+        <label>Augenfarbe</label>
+        <div class="choices">
+          <button type="button" class="choice" onclick="selectOne(this)">Blau</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Grün</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Braun</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Grau</button>
+        </div>
+
+        <label>Brustgröße</label>
+        <div class="choices">
+          <button type="button" class="choice" onclick="selectOne(this)">Klein</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Mittel</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Groß</button>
+        </div>
+
+        <label>Figur</label>
+        <div class="choices">
+          <button type="button" class="choice" onclick="selectOne(this)">Schlank</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Sportlich</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Kurvig</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Kräftig</button>
+        </div>
+
+        <label>Po-Form</label>
+        <div class="choices">
+          <button type="button" class="choice" onclick="selectOne(this)">Klein</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Rund</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Sportlich</button>
+          <button type="button" class="choice" onclick="selectOne(this)">Ausgeprägt</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <b>Interessen</b>
+        <div class="choices">
+          <button type="button" class="choice" onclick="toggleChoice(this)">Auto</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Gaming</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Sport</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Musik</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Reisen</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Kochen</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Filme</button>
+          <button type="button" class="choice" onclick="toggleChoice(this)">Natur</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Charakterbeschreibung</label>
+        <textarea id="description" rows="5" placeholder="Beschreibe deinen Charakter, z. B.:
+Sie ist selbstbewusst, liebt Autos und macht gerne Witze."></textarea>
+      </div>
+
+      <button onclick="saveCharacter()">Charakter speichern</button>
+    </div>
+  </div>
+
+  <div id="chat" class="screen">
+    <div class="bar"><button class="back" onclick="show('home')">‹</button><div class="avatar" style="width:42px;height:42px;font-size:16px">S</div><h2 id="chatname" style="margin-left:10px">Silvana</h2></div>
+    <div class="messages" id="messages"><div class="bubble">Hey 😊 Ich bin Silvana. Schön, dass du da bist!</div><div class="bubble">Wie möchtest du unseren Chat starten?</div></div>
+    <div class="compose"><input id="msg" placeholder="Nachricht schreiben…" onkeydown="if(event.key==='Enter')send()"><button onclick="send()">➤</button></div>
+  </div>
+</div>
+<script>
+const characters={
+  Silvana:{personality:"dominant, frech, verspielt",avatar:"S"},
+  Lisa:{personality:"freundlich, humorvoll, aufmerksam",avatar:"L"}
+};
+let currentCharacter="Silvana";
+let chats=JSON.parse(localStorage.getItem("aiFreundinChats")||"{}");
+let memory=JSON.parse(localStorage.getItem("aiFreundinMemory")||"{}");
+
+function persist(){localStorage.setItem("aiFreundinChats",JSON.stringify(chats));localStorage.setItem("aiFreundinMemory",JSON.stringify(memory));}
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");}
+
+function openChat(name){
+  currentCharacter=name;
+  document.getElementById("chatname").textContent=name;
+  const a=document.querySelector("#chat .bar .avatar"); a.textContent=characters[name]?.avatar||name[0];
+  if(!chats[name]) chats[name]=[
+    {from:"her",text:`Hey 😊 Ich bin ${name}. Schön, dass du da bist!`},
+    {from:"her",text:"Wie geht's dir? Erzähl mir, was gerade bei dir los ist."}
+  ];
+  renderMessages(); persist(); show("chat");
+  setTimeout(()=>document.getElementById("msg").focus(),100);
+}
+
+function renderMessages(){
+  const box=document.getElementById("messages"); box.innerHTML="";
+  (chats[currentCharacter]||[]).forEach(x=>addBubble(x.text,x.from==="me"?"me":""));
+  box.scrollTop=box.scrollHeight;
+}
+function addBubble(text,cls=""){
+  const b=document.createElement("div"); b.className="bubble "+cls; b.textContent=text;
+  document.getElementById("messages").appendChild(b);
+}
+function typing(){
+  const b=document.createElement("div"); b.id="typing"; b.className="bubble typing"; b.textContent="schreibt …";
+  document.getElementById("messages").appendChild(b); document.getElementById("messages").scrollTop=999999;
+}
+function removeTyping(){document.getElementById("typing")?.remove();}
+
+function remember(text){
+  let m=text.match(/(?:ich heiße|mein name ist)\s+([a-zäöüß -]+)/i);
+  if(m) memory.name=m[1].trim();
+  m=text.match(/(?:ich mag|ich liebe)\s+(.+)/i);
+  if(m) memory.like=m[1].replace(/[.!?]+$/,"").trim();
+  persist();
+}
+
+function topic(text){
+  const l=text.toLowerCase();
+  if(/\b(auto|wagen|bmw|mercedes|audi|vw)\b/.test(l))return"auto";
+  if(/\b(essen|pizza|burger|kochen|restaurant|frühstück|mittag|abendessen)\b/.test(l))return"essen";
+  if(/\b(musik|song|lied|sänger|band)\b/.test(l))return"musik";
+  if(/\b(film|serie|kino)\b/.test(l))return"film";
+  if(/\b(arbeit|job|chef|kollege)\b/.test(l))return"arbeit";
+  if(/\b(urlaub|reise|reisen|meer|hotel|fliegen)\b/.test(l))return"reise";
+  if(/\b(wochenende|samstag|sonntag|freizeit)\b/.test(l))return"wochenende";
+  return"";
+}
+
+function answer(text){
+  const l=text.toLowerCase().trim();
+  const hist=chats[currentCharacter]||[];
+  const lastHer=[...hist].reverse().find(x=>x.from==="her");
+  const n=memory.name?` ${memory.name}`:"";
+
+  if(/^(hi|hallo|hey|moin|servus|guten morgen|guten tag|guten abend)\b/i.test(l))
+    return `Hey${n} 😊 Schön, dass du da bist. Wie war dein Tag?`;
+
+  if(l.includes("wie geht")||l.includes("wie geht's")||l.includes("wie gehts"))
+    return "Mir geht's gut 😊 Ich bin gerade ganz bei dir. Aber wie geht es dir wirklich?";
+
+  if(l.includes("wer bist du")||l.includes("wie heißt du"))
+    return `Ich bin ${currentCharacter} 😊 Du kannst mir Fragen stellen, mir von deinem Tag erzählen oder einfach mit mir quatschen.`;
+
+  if(l.includes("was machst du"))
+    return "Gerade? Ich bin hier und höre dir zu 😊 Was machst du denn gerade?";
+
+  if(/^(ja|jap|jo)\b/i.test(l))
+    return lastHer?`Das freut mich 😊 Dann machen wir da weiter. ${nextQuestion(lastHer.text)}`:"Okay 😊 Erzähl mir mehr.";
+  if(/^(nein|nee|ne)\b/i.test(l))
+    return "Okay 😊 Dann lassen wir das. Worüber möchtest du stattdessen reden?";
+
+  const tp=topic(text);
+  if(/[?]$/.test(text)||/^(warum|wieso|weshalb|wie|was|wer|wo|wann|welche|welcher|welches|kann|kannst|würde|würdest|magst|liebst)\b/i.test(l)){
+    if(tp==="auto")return"Autos? 😏 Da kann ich mitreden. Was fährst du gerade – oder welches Auto würdest du am liebsten fahren?";
+    if(tp==="musik")return"Musik gehört für mich zu einem guten Tag einfach dazu 🎵 Was hörst du gerade am liebsten?";
+    if(tp==="film")return"Kommt darauf an, worauf ich Lust habe 😄 Eher Spannung, Komödie oder etwas zum Abschalten?";
+    if(tp==="essen")return"Darüber kann man immer reden 😋 Was hast du heute gegessen – und was ist dein Lieblingsessen?";
+    if(tp==="arbeit")return"Erzähl mir davon. Ist dein Job gerade eher entspannt oder ziemlich stressig?";
+    if(tp==="reise")return"Reisen finde ich spannend ✈️ Wohin würdest du sofort fahren, wenn du morgen loskönntest?";
+    return `Gute Frage 😊 Du meinst also „${text.replace(/[?]+$/,"")}“. Ich möchte dich richtig verstehen: Was ist dir daran besonders wichtig?`;
+  }
+
+  if(/\b(stress|gestresst|genervt|sauer|wütend|traurig|einsam|fertig|müde)\b/i.test(l))
+    return"Das klingt nicht nach einem einfachen Tag 😕 Erzähl mir, was passiert ist. Ich höre dir zu.";
+
+  if(/\b(glücklich|gut|super|freu|freue|happy)\b/i.test(l))
+    return"Das klingt gut 😊 Was ist denn passiert?";
+
+  if(l.includes("stell mir eine frage")||l.includes("frag mich"))
+    return"Sehr gern 😏 Was wäre für dich ein perfekter Abend, wenn du komplett frei entscheiden könntest?";
+
+  if(tp==="wochenende")return"Was wäre dein perfektes Wochenende: rausgehen, gemütlich zuhause oder spontan irgendwohin fahren?";
+  if(tp==="essen")return"Jetzt bekomme ich Hunger 😋 Was würdest du mir kochen, wenn ich heute bei dir wäre?";
+  if(tp==="reise")return"Das klingt spannend ✈️ Gibt es einen Ort, den du unbedingt einmal sehen möchtest?";
+
+  const replies=[
+    "Interessant 😊 Erzähl mir dazu noch ein bisschen mehr.",
+    "Okay, jetzt bin ich neugierig 😄 Wie meinst du das genau?",
+    "Das habe ich verstanden. Und was denkst du persönlich darüber?",
+    "Mhm 😊 Ich höre dir zu. Was ist dir daran besonders wichtig?",
+    "Das klingt interessant. Was ist danach passiert?"
+  ];
+  let r=replies[Math.floor(Math.random()*replies.length)];
+  if(lastHer&&r===lastHer.text)r=replies[(replies.indexOf(r)+1)%replies.length];
+  return r;
+}
+
+function nextQuestion(previous){
+  const l=previous.toLowerCase();
+  if(l.includes("tag"))return"Was war heute dein schönster Moment?";
+  if(l.includes("wochenende"))return"Was hast du am Wochenende vor?";
+  return"Erzähl mir ein bisschen mehr 😊";
+}
+
+function send(){
+  const input=document.getElementById("msg"), text=input.value.trim();
+  if(!text)return;
+  if(!chats[currentCharacter])chats[currentCharacter]=[];
+  chats[currentCharacter].push({from:"me",text}); remember(text); addBubble(text,"me"); input.value="";
+  document.getElementById("messages").scrollTop=999999; typing();
+  setTimeout(()=>{
+    removeTyping();
+    const reply=answer(text);
+    chats[currentCharacter].push({from:"her",text:reply});
+    addBubble(reply); persist(); document.getElementById("messages").scrollTop=999999;
+  },700+Math.random()*700);
+}
+
+
+function getSavedCharacters(){
+  return JSON.parse(localStorage.getItem("aiFreundinCharacters")||"[]");
+}
+function setSavedCharacters(list){
+  localStorage.setItem("aiFreundinCharacters",JSON.stringify(list));
+}
+function toggleChoice(el){el.classList.toggle("selected");}
+function selectOne(el){
+  const group=el.dataset.group;
+  if(group){
+    document.querySelectorAll(`[data-group="${group}"]`).forEach(x=>x.classList.remove("selected"));
+  } else {
+    // Only the current visual section/field is single-select.
+    const card=el.closest(".card");
+    const label=el.closest(".choices")?.previousElementSibling;
+    if(label){
+      const choices=label.nextElementSibling;
+      if(choices) choices.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));
+    } else {
+      const choices=el.parentElement;
+      choices.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));
+    }
+  }
+  el.classList.add("selected");
+}
+function selectedTexts(container){
+  return [...container.querySelectorAll(".choice.selected")].map(x=>x.textContent.trim());
+}
+function getSingleBeforeText(labelText){
+  const labels=[...document.querySelectorAll("#create label")];
+  const label=labels.find(x=>x.textContent.trim()===labelText);
+  if(!label)return "";
+  const choices=label.nextElementSibling;
+  return choices ? choices.querySelector(".choice.selected")?.textContent.trim()||"" : "";
+}
+function previewAvatar(event){
+  const file=event.target.files?.[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById("avatarPreview").innerHTML=`<img src="${e.target.result}" alt="Avatar">`;
+    document.getElementById("avatarPreview").dataset.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function startCreate(){
+  document.getElementById("cname").value="";
+  document.getElementById("age").value="";
+  document.getElementById("description").value="";
+  document.getElementById("avatarFile").value="";
+  document.getElementById("avatarPreview").innerHTML="+";
+  document.getElementById("avatarPreview").dataset.src="";
+  document.querySelectorAll("#create .choice").forEach(x=>x.classList.remove("selected"));
+  show("create");
+}
+function saveCharacter(){
+  const name=document.getElementById("cname").value.trim();
+  const age=Number(document.getElementById("age").value);
+  const gender=document.querySelector('#genderChoices .choice.selected')?.textContent.trim()||"";
+  if(!name){alert("Bitte gib einen Namen ein.");return;}
+  if(!Number.isInteger(age)||age<18||age>99){alert("Das Alter muss zwischen 18 und 99 liegen.");return;}
+  if(!gender){alert("Bitte wähle ein Geschlecht aus.");return;}
+
+  const cards=[...document.querySelectorAll("#create .card")];
+  const personality=selectedTexts(cards[2]);
+  const interests=selectedTexts(cards[5]);
+  const character={
+    id:Date.now().toString(),
+    name,age,gender,
+    avatar:document.getElementById("avatarPreview").dataset.src||"",
+    personality,
+    appearance:{
+      hairColor:getSingleBeforeText("Haarfarbe"),
+      hairstyle:getSingleBeforeText("Frisur"),
+      hairLength:getSingleBeforeText("Haarlänge"),
+      eyeColor:getSingleBeforeText("Augenfarbe"),
+      breastSize:getSingleBeforeText("Brustgröße"),
+      figure:getSingleBeforeText("Figur"),
+      buttShape:getSingleBeforeText("Po-Form")
+    },
+    interests,
+    description:document.getElementById("description").value.trim()
+  };
+
+  const list=getSavedCharacters().filter(c=>c.name.toLowerCase()!==name.toLowerCase());
+  list.push(character);
+  setSavedCharacters(list);
+
+  characters[name]={personality:personality.join(", "),avatar:name.charAt(0).toUpperCase()};
+  if(!chats[name]){
+    chats[name]=[
+      {from:"her",text:`Hey 😊 Ich bin ${name}. Schön, dass du mich erstellt hast!`},
+      {from:"her",text:character.description||"Erzähl mir etwas über dich – ich möchte dich kennenlernen."}
+    ];
+  }
+  persist();
+  renderCharacterList();
+  openChat(name);
+}
+function renderCharacterList(){
+  const box=document.getElementById("characterList");
+  const list=getSavedCharacters();
+
+  // Always keep the example characters available.
+  const base=[
+    {name:"Silvana",avatar:"S",preview:"Hey 😊 Wie geht's dir?"},
+    {name:"Lisa",avatar:"L",preview:"Hallo! Schön, dass du da bist."}
+  ];
+  box.innerHTML="";
+
+  base.forEach(c=>{
+    addCharacterRow(box,c.name,c.avatar,c.preview);
+  });
+
+  list.forEach(c=>{
+    if(base.some(b=>b.name.toLowerCase()===c.name.toLowerCase()))return;
+    addCharacterRow(box,c.name,c.avatar||c.name[0].toUpperCase(),"Neuer Charakter");
+  });
+}
+function addCharacterRow(box,name,avatar,preview){
+  const row=document.createElement("div");
+  row.className="chat";
+  row.onclick=()=>openChat(name);
+  const av=document.createElement("div");
+  av.className="avatar";
+  if(getSavedCharacters().find(c=>c.name===name)?.avatar){
+    av.innerHTML=`<img src="${getSavedCharacters().find(c=>c.name===name).avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }else av.textContent=avatar;
+  row.appendChild(av);
+  row.insertAdjacentHTML("beforeend",`<div class="info"><div class="name"></div><div class="preview"></div></div><div class="time">›</div>`);
+  row.querySelector(".name").textContent=name;
+  row.querySelector(".preview").textContent=preview;
+  box.appendChild(row);
+}
+
+// Load saved character definitions into the chat engine.
+getSavedCharacters().forEach(c=>{
+  characters[c.name]={personality:(c.personality||[]).join(", "),avatar:c.name[0].toUpperCase()};
+});
+
+document.getElementById("msg").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}
+});
+
+renderCharacterList();
+openChat("Silvana");
+</script>
+
+<script>
+/* Erweiterte Charakterverwaltung – vollständig lokal im Browser */
+window.AIFreundin = {
+  version: "1.0",
+  getCharacters() {
+    try { return JSON.parse(localStorage.getItem("aiFreundinCharacters") || "[]"); }
+    catch(e) { return []; }
+  },
+  getCharacter(name) {
+    return this.getCharacters().find(c => c.name === name) || null;
+  },
+  saveCharacterData(character) {
+    const list = this.getCharacters().filter(c => c.name !== character.name);
+    list.push(character);
+    localStorage.setItem("aiFreundinCharacters", JSON.stringify(list));
+  }
+};
+</script>
+
+</body>
+</html>
